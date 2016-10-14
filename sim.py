@@ -202,10 +202,6 @@ def getSpawnEventTime():
 	return r
 
 def formatTime(time):
-	#h = time // 3600000
-	#s = ((time - (h * 3600000)) // 3600)
-	#m = s // 60
-
 	s = (time / 1000) % 60
 	m = ((time / (1000*60)) % 60)
 	h = ((time / (1000*60*60)) % 24)
