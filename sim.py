@@ -3,8 +3,10 @@ Elevator Simulator
 '''
 
 from elevator import Elevator
+from controls import ElevatorControlSystem
 from building import Building
 from person import Person
+from logger import MessageLogger
 
 import sys
 import pygame
@@ -17,6 +19,7 @@ BLACK = (0,0,0)
 WHITE = (255,255,255)
 RED = (255,0,0)
 ORANGE = (255,127,36)
+BKG = (54,103,219)
 
 # Define screen width and height
 WINDOWWIDTH = 1100
@@ -29,7 +32,6 @@ SPAWN_THRESHOLD_MAX = 10000
 class Sim():
 	def __init__(self,width,height):
 		self.numFloors = 10                         # How many floors
-		self.numElevators = 4                       # How many elevators
 		self.elevators = []                         # List of Elevators
 		self.persons = []                           # List of People
 		self.personId = 0                           # ID Counter for new people
@@ -42,20 +44,29 @@ class Sim():
 		self.clock = self.startHour * 3600000       # ms counter for clock (start + updated every tick) - 3600000ms/hr
 		self.spawn_threshold = getSpawnEventTime()  # When will next event occur
 
-		# Initialize Building - Just do one for now
-		self.building = Building()
+		self.arrived = False                       # Global flag for elevator to announce it is at a floor
 
-		e = 100
-		# Initialize Elevators
-		for i in range(0, self.numElevators):
-			self.elevators.append(Elevator(i,self,e))
-			e+=150
+		# Initialize the message logger
+		self.logger = MessageLogger(self)
+		self.logger.log("Here is my message")
+		print str(self.logger.getMessages())
+
+		# Initialize Building - Just do one for now
+		self.building = Building(self)
+		self.building.initElevators()
+
+		# Initialize Elevator Control System
+		self.ecs = ElevatorControlSystem(self)
+		self.ecs.initElevators()
 
 		# Load Names file and initialize People
 		self.personNames = loadNames()
 		for i in range(0,25):
-			person = self.spawnPerson()
+			#person = self.spawnPerson()
+			pass
 
+		for i in range(1,10):
+			self.ecs.getClosestElevator(i)
 
 	def spawnPerson(self):
 		name = self.personNames[randint(0,len(self.personNames))]
@@ -64,18 +75,19 @@ class Sim():
 		self.persons.append(person)
 		self.personId += 1
 
-		el = randint(0,self.numElevators-1)
-		person.setDestination((self.elevators[el].getPosition()[0],self.height - self.ground))
+		el = randint(0,self.building.numElevators-1)
+		person.setDestination((self.building.elevators[el].getPosition()[0],self.height - self.ground))
 
 		return person
 
 	def personAction(self):
-		print "Person action"
-		# Find a random person
-		p = randint(0,len(self.persons)-1)
+		# Find a random person if we have any
 
-		# Do an action
-		self.persons[p].randomAction()
+		if self.persons:
+			p = randint(0,len(self.persons)-1)
+
+			# Do an action
+			self.persons[p].performAction()
 
 	def removePerson(self,id):
 
@@ -89,12 +101,15 @@ class Sim():
 	def simulate(self,dt):
 		# TODO: Figure out if we want a multiplier on dt to make it go faster
 		self.clock += dt
+		self.timer += dt
 
 		for person in self.persons:
-			if person.active:
+			if person.isActive():
 				person.act(dt)
 
-		self.timer += dt
+		for elevator in self.elevators:
+			if elevator.isActive():
+				elevator.act(dt)
 
 		# Spawn random events - these are for the existing people
 		# TODO: How many events? Fixed number? Or proportional to # of people in building? For now, just do 1
@@ -107,6 +122,11 @@ class Sim():
 	def randomEvent(self):
 		num = randint(0,100)
 
+		'''
+		TODO - need to weight this more heavily to new people being spawned at beginning of day (8am - 9amish range)
+		       and people leaving at end of day (4pm - 5pmish range)
+		'''
+
 		# System events only occur 5% of the time
 		if num < 5:
 			self.systemEvent()
@@ -114,15 +134,7 @@ class Sim():
 			self.personEvent()
 
 	def systemEvent(self):
-		print "System event - make elevator go to floor. Eventually shut down elevator"
-
-		for elevator in self.elevators:
-			if elevator.activeStatus() == False:
-				elevator.activate()
-				return
-
-		e = randint(0,self.numElevators-1)
-		self.elevators[e].deactivate()
+		self.building.systemEvent()
 
 	def personEvent(self):
 		num = randint(0,100)
@@ -139,6 +151,14 @@ class Sim():
 		renderElevators(screen,self)
 		renderPeople(screen,self)
 
+	def announce(self,arrived):
+		self.arrived = arrived
+
+		# Todo - maybe play sound
+
+	def isArrived(self):
+		return self.arrived
+
 def renderUI(screen,sim):
 	# Render time
 	time = sim.fontSmall.render(formatTime(sim.clock),1,WHITE)
@@ -153,7 +173,7 @@ def renderBuilding(screen,sim):
 		screen.blit(num,(0, (sim.height - sim.ground - ((floor+1) * sim.building.floorDistance))))
 
 def renderElevators(screen,sim):
-    for elevator in sim.elevators:
+    for elevator in sim.building.elevators:
 		num = sim.font.render(str(elevator.getNumber() + 1),1,WHITE)
 		#e = sim.font.render(str("EL"),1,WHITE)
 
@@ -174,8 +194,8 @@ def renderElevators(screen,sim):
 
 def renderPeople(screen,sim):
 	for person in sim.persons:
-		if person.visible:
-			pygame.draw.circle(screen, person.getColor(),person.getPosition(),10)
+		if person.isVisible():
+			pygame.draw.circle(screen, person.getColor(),person.getPosition(),person.getSize())
 
 # Functions outside of class
 def loadNames():
@@ -246,7 +266,7 @@ def main():
 
 		simulator.simulate(dt)
 
-		screen.fill(BLACK)
+		screen.fill(BKG)
 
 		simulator.render(screen,background)
 
