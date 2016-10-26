@@ -10,11 +10,6 @@ class Building:
 		self.numElevators = 4
 		self.elevators = []
 		self.floorDistance = 75
-		self.requests = {}
-
-		for floor in range(0,self.numFloors+1):
-			self.requests[floor] = 0
-
 
 	def initElevators(self):
 		e = 100
@@ -28,7 +23,7 @@ class Building:
 		print "System event - make elevator go to floor. Eventually shut down elevator"
 
 		for elevator in self.elevators:
-			if elevator.activeStatus() == False:
+			if elevator.active == False:
 				elevator.activate()
 				return
 
@@ -37,19 +32,7 @@ class Building:
 
 	def callElevator(self,floor):
 		# This will call the elevator
-		self.addRequest(floor)
+		# What does this need to do for the building? Nothing for now
 
-	def addRequest(self,floor):
-		print "Added request for elevator on floor " + str(floor)
-		req = self.requests[floor]
-		req += 1
-
-		self.requests[floor] += 1
-		print str(self.requests)
-
-	def clearRequests(self,floor):
-		print "Requests cleared on floor " + str(floor)
-		self.requests[floor] = 0
-
-	def getElevators(self):
-		return self.elevators
+		# Add request to ECS
+		self.sim.ecs.callElevator(floor)

@@ -49,7 +49,7 @@ class Sim():
 		# Initialize the message logger
 		self.logger = MessageLogger(self)
 		self.logger.log("Here is my message")
-		print str(self.logger.getMessages())
+		print str(self.logger.messages)
 
 		# Initialize Building - Just do one for now
 		self.building = Building(self)
@@ -65,8 +65,9 @@ class Sim():
 			#person = self.spawnPerson()
 			pass
 
-		for i in range(1,10):
-			self.ecs.getClosestElevator(i)
+		# Testing
+		#for i in range(1,10):
+		#	self.ecs.getClosestElevator(i)
 
 	def spawnPerson(self):
 		name = self.personNames[randint(0,len(self.personNames))]
@@ -76,7 +77,7 @@ class Sim():
 		self.personId += 1
 
 		el = randint(0,self.building.numElevators-1)
-		person.setDestination((self.building.elevators[el].getPosition()[0],self.height - self.ground))
+		person.setDestination((self.building.elevators[el].position[0],self.height - self.ground))
 
 		return person
 
@@ -104,11 +105,11 @@ class Sim():
 		self.timer += dt
 
 		for person in self.persons:
-			if person.isActive():
+			if person.active:
 				person.act(dt)
 
 		for elevator in self.elevators:
-			if elevator.isActive():
+			if elevator.active:
 				elevator.act(dt)
 
 		# Spawn random events - these are for the existing people
@@ -154,10 +155,9 @@ class Sim():
 	def announce(self,arrived):
 		self.arrived = arrived
 
-		# Todo - maybe play sound
-
-	def isArrived(self):
-		return self.arrived
+	# Todo - maybe play sound
+	#	def isArrived(self):
+	#		return self.arrived
 
 def renderUI(screen,sim):
 	# Render time
@@ -174,18 +174,18 @@ def renderBuilding(screen,sim):
 
 def renderElevators(screen,sim):
     for elevator in sim.building.elevators:
-		num = sim.font.render(str(elevator.getNumber() + 1),1,WHITE)
+		num = sim.font.render(str(elevator.number),1,WHITE)
 		#e = sim.font.render(str("EL"),1,WHITE)
 
-		pos = elevator.getPosition()
-		size = elevator.getSize()
+		pos = elevator.position
+		size = elevator.size
 
 		# render number - on ground floor
 		screen.blit(num,(pos[0],(sim.height- sim.ground)))
 
 		# render elevator itself - for now just the number
 		#screen.blit(e,elevator.getPosition())
-		if elevator.activeStatus() == True:
+		if elevator.active == True:
 			color = WHITE
 		else:
 			color = RED
@@ -194,8 +194,8 @@ def renderElevators(screen,sim):
 
 def renderPeople(screen,sim):
 	for person in sim.persons:
-		if person.isVisible():
-			pygame.draw.circle(screen, person.getColor(),person.getPosition(),person.getSize())
+		if person.visible:
+			pygame.draw.circle(screen, person.color,person.position,person.size)
 
 # Functions outside of class
 def loadNames():

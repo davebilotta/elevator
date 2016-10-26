@@ -1,4 +1,4 @@
-#
+# Control Systems go here - contains ElevatorControlSystem (and others?)
 
 class ElevatorControlSystem:
 
@@ -7,9 +7,29 @@ class ElevatorControlSystem:
 		self.sim = sim
 		self.numElevators = 4
 		self.elevators = []
+		self.requests = {}
+
+		for floor in range(0,self.sim.building.numFloors+1):
+			self.requests[floor] = 0
 
 	def initElevators(self):
-		self.elevators = self.sim.building.getElevators()
+		self.elevators = self.sim.building.elevators
+
+	def callElevator(self,floor):
+		# This will call the elevator
+		self.addRequest(floor)
+
+	def addRequest(self,floor):
+		print "ECS - Added request for elevator on floor " + str(floor)
+		req = self.requests[floor]
+		req += 1
+
+		self.requests[floor] += 1
+		print str(self.requests)
+
+	def clearRequests(self,floor):
+		print "Requests cleared on floor " + str(floor)
+		self.requests[floor] = 0
 
 	def getClosestElevator(self,floor):
 		#print "Finding closest elevator to floor " + str(floor)
@@ -17,9 +37,9 @@ class ElevatorControlSystem:
 		closest = None
 		distance = self.sim.building.numFloors
 		for elevator in self.elevators:
-			if elevator.isActive():
-				d = abs(elevator.getFloor() - floor)
-				print "Distance between elevator " + str(elevator.getNumber()) + " (currently on floor " + str(elevator.getFloor()) + ") and floor " + str(floor) + " is " + str(d)
+			if elevator.active:
+				d = abs(elevator.floor - floor)
+				print "Distance between elevator " + str(elevator.number) + " (currently on floor " + str(elevator.floor) + ") and floor " + str(floor) + " is " + str(d)
 
 				if (d < distance):
 					closest = elevator
@@ -27,5 +47,5 @@ class ElevatorControlSystem:
 
 		# Need to handle case where no elevator is active and we can't find one
 		if closest:
-			print "Closest elevator to floor " + str(floor) + " is " + str(closest.getNumber())
+			print "Closest elevator to floor " + str(floor) + " is " + str(closest.number)
 

@@ -52,7 +52,7 @@ class Person:
 		# TODO: self.waiting is set when it's at destination - should
 		#       probably process event at this point?
 
-		if self.sim.isArrived():
+		if self.sim.arrived:
 			if self.waiting:
 				print "Will exit floor and enter elevator here"
 
@@ -208,29 +208,8 @@ class Person:
 	def leaveFloor(self,elevator,floor):
 		self.visible = True
 
-	def getSize(self):
-		return self.size
-
-	def isVisible(self):
-		return self.visible
-
-	def isActive(self):
-		return self.active
-
 	def printDetails(self):
 		print "Name=" + self.name + " Id=" + str(self.id) + " Speed=" + str(self.speed) + " Position=" + str(self.position) + " Direction=" + str(self.direction) + " Destination=" + str(self.destination)
-
-	def getId(self):
-		return self.id
-
-	def getName(self):
-		return self.name
-
-	def getColor(self):
-		return self.color
-
-	def getPosition(self):
-		return self.position
 
 def randomFloor(sim):
 	return randint(0,sim.building.numFloors)

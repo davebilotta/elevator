@@ -33,7 +33,9 @@ class Elevator:
 		self.floor = floor
 		self.position = (self.position[0],(self.sim.height-self.sim.ground - (floor * self.sim.building.floorDistance)))
 
-	# Active
+	#
+	# Activation/Deactivation
+	#
 	def activate(self):
 		self.active = True
 		print "Elevator is active"
@@ -41,10 +43,9 @@ class Elevator:
 	def deactivate(self):
 		self.active = False
 
-	def activeStatus(self):
-		return self.active
-
-	# Moving
+	#
+	# Movement
+	#
 	def start(self):
 		self.moving = True
 		print "Elevator " + str(self.number) + " is moving"
@@ -53,34 +54,18 @@ class Elevator:
 		self.moving = False
 		print "Elevator " + str(self.number) + " has stopped"
 
-	# Doors open/close
+	#
+	# Doors Controls
+	#
 	def open(self):
 		self.doorsOpen = True
 
 	def close(self):
 		self.doorsOpen = False
 
-	def getNumber(self):
-		return self.number
-
-	def getPosition(self):
-		return self.position
-
-	def getSize(self):
-		return self.size
-
-	def getCapacity(self):
-		return self.capacity
-
-	def isActive(self):
-		return self.active
-
-	def isMoving(self):
-		return self.moving
-
-	def getFloor(self):
-		return self.floor
-
+	#
+	# Arrival/departure
+	#
 	def arrive(self):
 		self.sim.announce(True)
 
